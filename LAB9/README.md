@@ -1,752 +1,519 @@
-# **Основные протоколы сети интернет**
+# **Лабораторная работа. "Развертывание коммутируемой сети с резервными каналами"**
 ## **Топология** 
-![](https://github.com/ivanbondarev1/Otus/raw/main/Profi/DZ9/EVE%20_%20Topology%20-%20Google%20Chrome%2021.07.2023%2011_42_48.png?raw=true)
+![](https://github.com/ivanbondarev1/Youdo/blob/main/LAB9/Cisco%20Packet%20Tracer%2026.10.2023%2017_48_40.png?raw=truee)
+
+## **Цели:**
++ ### Часть 1. Создание сети и настройка основных параметров устройства
++ ### Часть 2. Выбор корневого моста
++ ### Часть 3. Наблюдение за процессом выбора протоколом STP порта, исходя из стоимости портов
++ ### Часть 4. Наблюдение за процессом выбора протоколом STP порта, исходя из приоритета портов
 
 
-
-## **Задачи:**
-+ ### Настроите NAT(PAT) на R14 и R15. Трансляция должна осуществляться в адрес автономной системы AS1001.
-+ ### Настроите NAT(PAT) на R18. Трансляция должна осуществляться в пул из 5 адресов автономной системы AS2042.
-+ ### Настроите NAT так, чтобы R19 был доступен с любого узла для удаленного управления. 5*. Настроите статический NAT(PAT) для офиса Чокурдах.
-+ ### Настроите для IPv4 DHCP сервер в офисе Москва на маршрутизаторах R12 и R13. VPC1 и VPC7 должны получать сетевые настройки по DHCP.
-+ ### Настроите NTP сервер на R12 и R13. Все устройства в офисе Москва должны синхронизировать время с R12 и R13.
-
-
-### К работе я прикладываю файл с лабораторной
 
 ## **Решение**
+## **Часть 1. Создание сети и настройка основных параметров устройства**
 
+### **Шаг 1. Создайте сеть согласно топологии.**
+### **Шаг 2. Выполните инициализацию и перезагрузку коммутаторов.**
 
-## Адресное пространство:
+### **Шаг 3. Настройте базовые параметры каждого коммутатора.**
 
-
-### **Топология**
-
-![](https://github.com/ivanbondarev1/Otus/blob/main/Profi/DZ9/EVE%20_%20Topology%20-%20Google%20Chrome%2021.07.2023%2011_42_48.png?raw=true)
-
-
-## Настройки:
-
-### **Москва:**
-
-
-### **R14:**
+### S1:
 ```
+Switch#en
+Switch#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+Switch(config)#h S1
+S1(config)#no ip domain-loo
+S1(config)#enable sec class
+S1(config)#line con 0
+S1(config-line)#logging syn
+S1(config-line)#pass cisco
+S1(config-line)#login
+S1(config-line)#exit
+S1(config)#line vty 0 15
+S1(config-line)#pass cisco
+S1(config-line)#login
+S1(config-line)#exit
+S1(config)#ser pass
+S1(config)#banner motd *STAY_OUT*
+S1(config)#int vlan 1
+S1(config-if)#ip addr 192.168.1.1 255.255.255.0
+S1(config-if)#no sh
 
-interface Loopback0
- ip address 140.140.140.140 255.255.255.255
- ip ospf 1 area 0
-!
-interface Ethernet0/0
- ip address 192.168.0.18 255.255.255.240
- ip ospf 1 area 0
-!
-interface Ethernet0/1
- ip address 192.168.0.68 255.255.255.240
- ip ospf 1 area 0
-!
-interface Ethernet0/2
- ip address 77.14.2.1 255.255.255.0
-!
-interface Ethernet0/3
- ip address 192.168.0.81 255.255.255.240
- ip ospf network point-to-point
- ip ospf 1 area 101
-!
-interface Ethernet1/0
- ip address 192.168.0.178 255.255.255.240
- ip ospf 1 area 0
-!
-interface Ethernet1/1
- no ip address
- shutdown
-!
-interface Ethernet1/2
- no ip address
- shutdown
-!
-interface Ethernet1/3
- no ip address
- shutdown
-!
-router ospf 1
- router-id 14.14.14.14
- area 101 stub no-summary
- default-information originate
-!
-router bgp 1001
- bgp router-id 14.14.14.14
- bgp log-neighbor-changes
- network 77.14.2.0 mask 255.255.255.0
- neighbor 77.14.2.2 remote-as 101
- neighbor 150.150.150.150 remote-as 1001
- neighbor 150.150.150.150 update-source Loopback0
- neighbor 150.150.150.150 next-hop-self
-!
-ip forward-protocol nd
-!
-!
-no ip http server
-no ip http secure-server
-ip route 0.0.0.0 0.0.0.0 Null0
-ip route 192.168.0.0 255.255.0.0 Null0
+S1(config-if)#
+%LINK-5-CHANGED: Interface Vlan1, changed state to up
 
+%LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1, changed state to up
 
-
-```
-
-```
-R14#sh ip route bgp
-Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
-       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
-       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
-       E1 - OSPF external type 1, E2 - OSPF external type 2
-       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
-       ia - IS-IS inter area, * - candidate default, U - per-user static route
-       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
-       a - application route
-       + - replicated route, % - next hop override
-
-Gateway of last resort is 0.0.0.0 to network 0.0.0.0
-
-      10.0.0.0/26 is subnetted, 4 subnets
-B        10.0.0.0 [200/0] via 150.150.150.150, 00:03:46
-B        10.0.0.64 [200/0] via 150.150.150.150, 00:03:46
-B        10.0.0.128 [200/0] via 150.150.150.150, 00:03:46
-B        10.0.0.192 [200/0] via 150.150.150.150, 00:03:46
-      77.0.0.0/8 is variably subnetted, 3 subnets, 2 masks
-B        77.15.2.0/24 [200/0] via 150.150.150.150, 00:03:46
-      78.0.0.0/24 is subnetted, 2 subnets
-B        78.24.3.0 [200/0] via 150.150.150.150, 00:03:46
-B        78.26.3.0 [200/0] via 150.150.150.150, 00:03:30
-      100.0.0.0/24 is subnetted, 1 subnets
-B        100.22.1.0 [200/0] via 150.150.150.150, 00:03:46
-      101.0.0.0/24 is subnetted, 2 subnets
-B        101.21.2.0 [200/0] via 150.150.150.150, 00:03:46
-B        101.22.2.0 [200/0] via 150.150.150.150, 00:03:30
-
-
-```
-
-```
-R14#sh ip bgp
-BGP table version is 14, local router ID is 14.14.14.14
-Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
-              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
-              x best-external, a additional-path, c RIB-compressed,
-Origin codes: i - IGP, e - EGP, ? - incomplete
-RPKI validation codes: V valid, I invalid, N Not found
-
-     Network          Next Hop            Metric LocPrf Weight Path
- *>i 10.0.0.0/26      150.150.150.150          0    200      0 301 520 i
- *                    77.14.2.2                              0 101 520 i
- *>i 10.0.0.64/26     150.150.150.150          0    200      0 301 520 i
- *                    77.14.2.2                              0 101 520 i
- *>i 10.0.0.128/26    150.150.150.150          0    200      0 301 520 i
- *                    77.14.2.2                              0 101 520 i
- *>i 10.0.0.192/26    150.150.150.150          0    200      0 301 520 i
- *                    77.14.2.2                              0 101 520 i
- * i 77.14.2.0/24     150.150.150.150          0    200      0 301 101 i
- *>                   0.0.0.0                  0         32768 i
- *                    77.14.2.2                0             0 101 i
- *>i 77.15.2.0/24     150.150.150.150          0    100      0 i
- *                    77.14.2.2                              0 101 301 i
- *>i 78.24.3.0/24     150.150.150.150          0    200      0 301 520 i
- *                    77.14.2.2                              0 101 520 i
- *>i 78.26.3.0/24     150.150.150.150          0    200      0 301 520 i
- *                    77.14.2.2                              0 101 520 i
- *>i 100.22.1.0/24    150.150.150.150          0    200      0 301 i
- *                    77.14.2.2                0             0 101 i
- *>i 101.21.2.0/24    150.150.150.150          0    200      0 301 i
- *                    77.14.2.2                              0 101 301 i
- *>i 101.22.2.0/24    150.150.150.150          0    200      0 301 101 i
- *                    77.14.2.2                0             0 101 i
-
+S1(config-if)#
+S1#
 
 ```
 
 
-### **R15**:
+### S2:
 
 ```
-interface Loopback0
- ip address 150.150.150.150 255.255.255.255
- ip ospf 1 area 0
-!
-interface Ethernet0/0
- ip address 192.168.0.98 255.255.255.240
- ip ospf 1 area 0
-!
-interface Ethernet0/1
- ip address 192.168.0.34 255.255.255.240
- ip ospf 1 area 0
-!
-interface Ethernet0/2
- ip address 77.15.2.1 255.255.255.0
-!
-interface Ethernet0/3
- ip address 192.168.0.113 255.255.255.240
- ip ospf network point-to-point
- ip ospf 1 area 102
-!
-interface Ethernet1/0
- ip address 192.168.0.177 255.255.255.240
- ip ospf 1 area 0
-!
-interface Ethernet1/1
- no ip address
- shutdown
-!
-interface Ethernet1/2
- no ip address
- shutdown
-!
-interface Ethernet1/3
- no ip address
- shutdown
-!
-router ospf 1
- router-id 15.15.15.15
- priority 120
- area 102 filter-list prefix 102 in
- default-information originate
-!
-router bgp 1001
- bgp router-id 15.15.15.15
- bgp log-neighbor-changes
- network 77.15.2.0 mask 255.255.255.0
- neighbor 77.15.2.2 remote-as 301
- neighbor 77.15.2.2 route-map lamas in
- neighbor 140.140.140.140 remote-as 1001
- neighbor 140.140.140.140 update-source Loopback0
- neighbor 140.140.140.140 next-hop-self
-!
-ip forward-protocol nd
-!
-!
-no ip http server
-no ip http secure-server
-ip route 0.0.0.0 0.0.0.0 Null0
-!
-!
-ip prefix-list 102 seq 5 deny 192.168.0.80/28
-ip prefix-list 102 seq 10 permit 0.0.0.0/0 le 32
+Switch>en
+Switch#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+Switch(config)#h S2
+S2(config)#no ip domain-loo
+S2(config)#enable sec class
+S2(config)#line con 0
+S2(config-line)#logging syn
+S2(config-line)#pass cisco
+S2(config-line)#login
+S2(config-line)#exit
+S2(config)#line vty 0 15
+S2(config-line)#pass cisco
+S2(config-line)#login
+S2(config-line)#exit
+S2(config)#ser pass
+S2(config)#banner motd *STAY_OUT*
+S2(config)#int vlan 1
+S2(config-if)#ip addr 192.168.1.2 255.255.255.0
+S2(config-if)#no sh
 
+S2(config-if)#
+%LINK-5-CHANGED: Interface Vlan1, changed state to up
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1, changed state to up
+
+S2(config-if)#
+
+```
+
+### S3:
+
+```
+Switch>
+Switch>en
+Switch#conf t
+Enter configuration commands, one per line.  End with CNTL/Z.
+Switch(config)#h S3
+S3(config)#no ip domain-loo
+S3(config)#enable sec class
+S3(config)#line con 0
+S3(config-line)#logging syn
+S3(config-line)#pass cisco
+S3(config-line)#login
+S3(config-line)#exit
+S3(config)#line vty 0 15
+S3(config-line)#pass cisco
+S3(config-line)#login
+S3(config-line)#exit
+S3(config)#ser pass
+S3(config)#banner motd *STAY_OUT*
+S3(config)#int vlan 1
+S3(config-if)#ip addr 192.168.1.3 255.255.255.0
+S3(config-if)#no sh
+
+S3(config-if)#
+%LINK-5-CHANGED: Interface Vlan1, changed state to up
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1, changed state to up
+
+S3(config-if)#
 
 
 ```
 
-```
-R15#sh ip route bgp
-Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
-       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
-       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
-       E1 - OSPF external type 1, E2 - OSPF external type 2
-       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
-       ia - IS-IS inter area, * - candidate default, U - per-user static route
-       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
-       a - application route
-       + - replicated route, % - next hop override
+### **Шаг 4. Проверьте связь.**
 
-Gateway of last resort is 0.0.0.0 to network 0.0.0.0
 
-      10.0.0.0/26 is subnetted, 4 subnets
-B        10.0.0.0 [20/0] via 77.15.2.2, 00:07:54
-B        10.0.0.64 [20/0] via 77.15.2.2, 00:07:54
-B        10.0.0.128 [20/0] via 77.15.2.2, 00:07:54
-B        10.0.0.192 [20/0] via 77.15.2.2, 00:07:54
-      77.0.0.0/8 is variably subnetted, 3 subnets, 2 masks
-B        77.14.2.0/24 [20/0] via 77.15.2.2, 00:07:37
-      78.0.0.0/24 is subnetted, 2 subnets
-B        78.24.3.0 [20/0] via 77.15.2.2, 00:07:54
-B        78.26.3.0 [20/0] via 77.15.2.2, 00:07:37
-      100.0.0.0/24 is subnetted, 1 subnets
-B        100.22.1.0 [20/0] via 77.15.2.2, 00:07:54
-      101.0.0.0/24 is subnetted, 2 subnets
-B        101.21.2.0 [20/0] via 77.15.2.2, 00:07:54
-B        101.22.2.0 [20/0] via 77.15.2.2, 00:07:37
+
+### Успешно ли выполняется эхо-запрос от коммутатора S1 на коммутатор S2? **Ответ:** Да
+
+### Успешно ли выполняется эхо-запрос от коммутатора S1 на коммутатор S3? **Ответ:** Да
+
+### Успешно ли выполняется эхо-запрос от коммутатора S2 на коммутатор S3? **Ответ:** Да
+
+
+## **Часть 2. Определение корневого моста**
+### **Шаг 1. Отключите все порты на коммутаторах**
+### **Шаг 2. Настройте подключенные порты в качестве транковых.**
+### **Шаг 3. Включите порты F0/2 и F0/4 на всех коммутаторах.**
+### **Шаг 4. Отобразите данные протокола spanning-tree.**
+
+### S1:
 
 ```
+S1(config)#int ra fa0/1-4
+S1(config-if-range)#sh
 
-### iBGP в провайдере Триада, с использованием RR.
+S1(config-if-range)#
+%LINK-5-CHANGED: Interface FastEthernet0/1, changed state to administratively down
 
-### **Триада**
+%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to down
 
-### **R25**:
+%LINK-5-CHANGED: Interface FastEthernet0/2, changed state to administratively down
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/2, changed state to down
+
+%LINK-5-CHANGED: Interface FastEthernet0/3, changed state to administratively down
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/3, changed state to down
+
+%LINK-5-CHANGED: Interface FastEthernet0/4, changed state to administratively down
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/4, changed state to down
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1, changed state to down
+
+S1(config-if-range)#sw m tr
+S1(config-if-range)#int ra fa0/2, fa0/4
+S1(config-if-range)#no sh
+
+
+S1(config-if-range)#
+%LINK-5-CHANGED: Interface FastEthernet0/2, changed state to up
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/2, changed state to up
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1, changed state to up
+
+%LINK-5-CHANGED: Interface FastEthernet0/4, changed state to up
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/4, changed state to up
+
+S1(config-if-range)#
+```
 
 ```
-interface Loopback0
- ip address 25.25.25.25 255.255.255.255
- ip router isis
-!
-interface Ethernet0/0
- ip address 10.0.0.2 255.255.255.192
- ip router isis
-!
-interface Ethernet0/1
- ip address 89.25.1.1 255.255.255.0
-!
-interface Ethernet0/2
- ip address 10.0.0.129 255.255.255.192
- ip router isis
- isis circuit-type level-2-only
-!
-interface Ethernet0/3
- ip address 14.25.3.1 255.255.255.0
-!
-interface Ethernet1/0
- no ip address
- shutdown
-!
-interface Ethernet1/1
- no ip address
- shutdown
-!
-interface Ethernet1/2
- no ip address
- shutdown
-!
-interface Ethernet1/3
- no ip address
- shutdown
-!
-router isis
- net 49.2222.0025.0025.0025.00
-!
-router bgp 520
- bgp log-neighbor-changes
- network 10.0.0.0 mask 255.255.255.192
- network 10.0.0.128 mask 255.255.255.192
- neighbor 23.23.23.23 remote-as 520
- neighbor 23.23.23.23 update-source Loopback0
- neighbor 23.23.23.23 route-reflector-client
- neighbor 23.23.23.23 next-hop-self
- neighbor 24.24.24.24 remote-as 520
- neighbor 24.24.24.24 update-source Loopback0
- neighbor 24.24.24.24 route-reflector-client
- neighbor 24.24.24.24 next-hop-self
- neighbor 26.26.26.26 remote-as 520
- neighbor 26.26.26.26 update-source Loopback0
- neighbor 26.26.26.26 next-hop-self
-!
-ip forward-protocol nd
-!
-!
-no ip http server
-no ip http secure-server
-ip route 14.28.2.0 255.255.255.0 14.25.3.2
-ip route 14.28.3.0 255.255.255.0 14.25.3.2
+S1#sh spanning-tree 
+VLAN0001
+  Spanning tree enabled protocol ieee
+  Root ID    Priority    32769
+             Address     0001.424A.94CB
+             Cost        19
+             Port        4(FastEthernet0/4)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+             Address     00D0.FFC7.C9E4
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/4            Root LRN 19        128.4    P2p
+Fa0/2            Altn BLK 19        128.2    P2p
+
+
+```
+
+### S2:
+
+```
+S2(config)#int ra fa0/1-4
+S2(config-if-range)#sh
+
+%LINK-5-CHANGED: Interface FastEthernet0/1, changed state to administratively down
+
+
+S2(config-if-range)#
+%LINK-5-CHANGED: Interface FastEthernet0/2, changed state to administratively down
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/2, changed state to down
+
+%LINK-5-CHANGED: Interface FastEthernet0/3, changed state to administratively down
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/3, changed state to down
+
+%LINK-5-CHANGED: Interface FastEthernet0/4, changed state to administratively down
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/4, changed state to down
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1, changed state to down
+
+S2(config-if-range)#sw m tr
+S2(config-if-range)#int ra fa0/2, fa0/4
+S2(config-if-range)#no sh
+
+
+S2(config-if-range)#
+%LINK-5-CHANGED: Interface FastEthernet0/2, changed state to up
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/2, changed state to up
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1, changed state to up
+
+%LINK-5-CHANGED: Interface FastEthernet0/4, changed state to up
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/4, changed state to up
+
+S2(config-if-range)#
 
 
 ```
 
 ```
-R25#sh ip protocols
-*** IP Routing is NSF aware ***
+S2#sh spanning-tree 
+VLAN0001
+  Spanning tree enabled protocol ieee
+  Root ID    Priority    32769
+             Address     0001.424A.94CB
+             Cost        19
+             Port        4(FastEthernet0/4)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
 
-Routing Protocol is "application"
-  Sending updates every 0 seconds
-  Invalid after 0 seconds, hold down 0, flushed after 0
-  Outgoing update filter list for all interfaces is not set
-  Incoming update filter list for all interfaces is not set
-  Maximum path: 32
-  Routing for Networks:
-  Routing Information Sources:
-    Gateway         Distance      Last Update
-  Distance: (default is 4)
+  Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+             Address     0004.9ABD.E56A
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
 
-Routing Protocol is "isis"
-  Outgoing update filter list for all interfaces is not set
-  Incoming update filter list for all interfaces is not set
-  Redistributing: isis
-  Address Summarization:
-    None
-  Maximum path: 4
-  Routing for Networks:
-    Loopback0
-    Ethernet0/0
-    Ethernet0/2
-  Routing Information Sources:
-    Gateway         Distance      Last Update
-    23.23.23.23          115      00:10:46
-    24.24.24.24          115      00:10:46
-    26.26.26.26          115      00:10:46
-  Distance: (default is 115)
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/2            Desg FWD 19        128.2    P2p
+Fa0/4            Root FWD 19        128.4    P2p
 
-Routing Protocol is "bgp 520"
-  Outgoing update filter list for all interfaces is not set
-  Incoming update filter list for all interfaces is not set
-  Route Reflector for address family IPv4 Unicast, 2 clients
-  IGP synchronization is disabled
-  Automatic route summarization is disabled
-  Neighbor(s):
-    Address          FiltIn FiltOut DistIn DistOut Weight RouteMap
-    23.23.23.23
-    24.24.24.24
-    26.26.26.26
-  Maximum path: 1
-  Routing Information Sources:
-    Gateway         Distance      Last Update
-    26.26.26.26          200      00:09:49
-    24.24.24.24          200      00:09:42
-    23.23.23.23          200      00:09:38
-  Distance: external 20 internal 200 local 200
+```
 
+### S3:
+
+
+```
+S3(config)#int ra fa0/1-4
+S3(config-if-range)#sh
+
+%LINK-5-CHANGED: Interface FastEthernet0/1, changed state to administratively down
+
+
+%LINK-5-CHANGED: Interface FastEthernet0/3, changed state to administratively down
+
+S3(config-if-range)#
+%LINK-5-CHANGED: Interface FastEthernet0/2, changed state to administratively down
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/2, changed state to down
+
+%LINK-5-CHANGED: Interface FastEthernet0/4, changed state to administratively down
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/4, changed state to down
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1, changed state to down
+
+S3(config-if-range)#sw m tr
+S3(config-if-range)#int ra fa0/2, fa0/4
+S3(config-if-range)#no sh
+
+
+S3(config-if-range)#
+%LINK-5-CHANGED: Interface FastEthernet0/2, changed state to up
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/2, changed state to up
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1, changed state to up
+
+%LINK-5-CHANGED: Interface FastEthernet0/4, changed state to up
+
+%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/4, changed state to up
+
+S3(config-if-range)#
+```
+
+```
+S3#sh spanning-tree 
+VLAN0001
+  Spanning tree enabled protocol ieee
+  Root ID    Priority    32769
+             Address     0001.424A.94CB
+             This bridge is the root
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+             Address     0001.424A.94CB
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/2            Desg FWD 19        128.2    P2p
+Fa0/4            Desg FWD 19        128.4    P2p
 
 
 ```
 
-### **R26:**
+![](https://github.com/ivanbondarev1/Youdo/blob/main/LAB9/Рисунок1.png?raw=true)
+
+![](https://github.com/ivanbondarev1/Youdo/blob/main/LAB9/Lab___Building_a_Switched_Network_with_Redundant_Links-35585-eceba2.docx%20-%20Word%2026.10.2023%2018_56_27.png?raw=true)
+
+
+
+
+## **Часть 3. Наблюдение за процессом выбора протоколом STP порта, исходя из стоимости портов**
+
+### **Шаг 1. Определите коммутатор с заблокированным портом.**
+
+
+### S1:
 
 ```
-interface Loopback0
- ip address 26.26.26.26 255.255.255.255
- ip router isis
-!
-interface Ethernet0/0
- ip address 10.0.0.194 255.255.255.192
- ip router isis
- isis circuit-type level-2-only
-!
-interface Ethernet0/1
- ip address 14.26.1.1 255.255.255.0
-!
-interface Ethernet0/2
- ip address 10.0.0.130 255.255.255.192
- ip router isis
- isis circuit-type level-2-only
-!
-interface Ethernet0/3
- ip address 78.26.3.1 255.255.255.0
-!
-interface Ethernet1/0
- no ip address
- shutdown
-!
-interface Ethernet1/1
- no ip address
- shutdown
-!
-interface Ethernet1/2
- no ip address
- shutdown
-!
-interface Ethernet1/3
- no ip address
- shutdown
-!
-router isis
- net 49.0026.0026.0026.0026.00
-!
-router bgp 520
- bgp router-id 26.26.26.26
- bgp cluster-id 25.25.25.25
- bgp log-neighbor-changes
- network 10.0.0.128 mask 255.255.255.192
- network 10.0.0.192 mask 255.255.255.192
- network 78.26.3.0 mask 255.255.255.0
- neighbor 23.23.23.23 remote-as 520
- neighbor 23.23.23.23 update-source Loopback0
- neighbor 23.23.23.23 route-reflector-client
- neighbor 24.24.24.24 remote-as 520
- neighbor 24.24.24.24 update-source Loopback0
- neighbor 24.24.24.24 route-reflector-client
- neighbor 25.25.25.25 remote-as 520
- neighbor 25.25.25.25 update-source Loopback0
- neighbor 78.26.3.2 remote-as 2042
+S1#sh spanning-tree 
+VLAN0001
+  Spanning tree enabled protocol ieee
+  Root ID    Priority    32769
+             Address     0001.424A.94CB
+             Cost        19
+             Port        4(FastEthernet0/4)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
 
+  Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+             Address     00D0.FFC7.C9E4
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/4            Root FWD 19        128.4    P2p
+Fa0/2            Altn BLK 19        128.2    P2p
 
 ```
 
+### S2:
+
 ```
-R26#sh ip protocols
-*** IP Routing is NSF aware ***
+S2#sh spanning-tree 
+VLAN0001
+  Spanning tree enabled protocol ieee
+  Root ID    Priority    32769
+             Address     0001.424A.94CB
+             Cost        19
+             Port        4(FastEthernet0/4)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
 
-Routing Protocol is "application"
-  Sending updates every 0 seconds
-  Invalid after 0 seconds, hold down 0, flushed after 0
-  Outgoing update filter list for all interfaces is not set
-  Incoming update filter list for all interfaces is not set
-  Maximum path: 32
-  Routing for Networks:
-  Routing Information Sources:
-    Gateway         Distance      Last Update
-  Distance: (default is 4)
+  Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+             Address     0004.9ABD.E56A
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
 
-Routing Protocol is "isis"
-  Outgoing update filter list for all interfaces is not set
-  Incoming update filter list for all interfaces is not set
-  Redistributing: isis
-  Address Summarization:
-    None
-  Maximum path: 4
-  Routing for Networks:
-    Loopback0
-    Ethernet0/0
-    Ethernet0/2
-  Routing Information Sources:
-    Gateway         Distance      Last Update
-    23.23.23.23          115      00:12:43
-    24.24.24.24          115      00:12:48
-    25.25.25.25          115      00:12:43
-  Distance: (default is 115)
-
-Routing Protocol is "bgp 520"
-  Outgoing update filter list for all interfaces is not set
-  Incoming update filter list for all interfaces is not set
-  Route Reflector for address family IPv4 Unicast with the cluster-id 25.25.25.25, 2 clients
-  IGP synchronization is disabled
-  Automatic route summarization is disabled
-  Neighbor(s):
-    Address          FiltIn FiltOut DistIn DistOut Weight RouteMap
-    23.23.23.23
-    24.24.24.24
-    25.25.25.25
-    78.26.3.2
-  Maximum path: 1
-  Routing Information Sources:
-    Gateway         Distance      Last Update
-    23.23.23.23          200      00:11:36
-    24.24.24.24          200      00:11:43
-    25.25.25.25          200      00:11:50
-  Distance: external 20 internal 200 local 200
-
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/2            Desg FWD 19        128.2    P2p
+Fa0/4            Root FWD 19        128.4    P2p
 
 ```
 
-### **R24:**
+### **Шаг 2. Измените стоимость порта.**
 
 ```
-interface Loopback0
- ip address 24.24.24.24 255.255.255.255
- ip router isis
-!
-interface Ethernet0/0
- ip address 101.21.2.2 255.255.255.0
-!
-interface Ethernet0/1
- ip address 10.0.0.193 255.255.255.192
- ip router isis
- isis circuit-type level-2-only
-!
-interface Ethernet0/2
- ip address 10.0.0.66 255.255.255.192
- ip router isis
- isis circuit-type level-2-only
-!
-interface Ethernet0/3
- ip address 78.24.3.1 255.255.255.0
-!
-interface Ethernet1/0
- no ip address
- shutdown
-!
-interface Ethernet1/1
- no ip address
- shutdown
-!
-interface Ethernet1/2
- no ip address
- shutdown
-!
-interface Ethernet1/3
- no ip address
- shutdown
-!
-router isis
- net 49.0024.0024.0024.0024.00
-!
-router bgp 520
- bgp router-id 24.24.24.24
- bgp log-neighbor-changes
- network 10.0.0.64 mask 255.255.255.192
- network 10.0.0.192 mask 255.255.255.192
- network 78.24.3.0 mask 255.255.255.0
- network 101.21.2.0 mask 255.255.255.0
- neighbor 25.25.25.25 remote-as 520
- neighbor 25.25.25.25 update-source Loopback0
- neighbor 25.25.25.25 next-hop-self
- neighbor 26.26.26.26 remote-as 520
- neighbor 26.26.26.26 update-source Loopback0
- neighbor 26.26.26.26 next-hop-self
- neighbor 78.24.3.2 remote-as 2042
- neighbor 101.21.2.1 remote-as 301
+S1(config)#int fa0/4
+S1(config-if)#sp
+S1(config-if)#spa
+S1(config-if)#spanning-tree co
+S1(config-if)#spanning-tree cost 18
+```
+
+### **Шаг 3. Просмотрите изменения протокола spanning-tree.**
+
+### S1:
+
+```
+S1#sh spanning-tree 
+VLAN0001
+  Spanning tree enabled protocol ieee
+  Root ID    Priority    32769
+             Address     0001.424A.94CB
+             Cost        18
+             Port        4(FastEthernet0/4)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+             Address     00D0.FFC7.C9E4
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/4            Root FWD 18        128.4    P2p
+Fa0/2            Desg FWD 19        128.2    P2p
 
 ```
 
-
-
-### **R23:**
+### S2:
 
 ```
-interface Loopback0
- ip address 23.23.23.23 255.255.255.255
- ip router isis
-!
-interface Ethernet0/0
- ip address 101.22.2.2 255.255.255.0
-!
-interface Ethernet0/1
- ip address 10.0.0.1 255.255.255.192
- ip router isis
-!
-interface Ethernet0/2
- ip address 10.0.0.65 255.255.255.192
- ip router isis
- isis circuit-type level-2-only
-!
-interface Ethernet0/3
- no ip address
- shutdown
-!
-interface Ethernet1/0
- no ip address
- shutdown
-!
-interface Ethernet1/1
- no ip address
- shutdown
-!
-interface Ethernet1/2
- no ip address
- shutdown
-!
-interface Ethernet1/3
- no ip address
- shutdown
-!
-router isis
- net 49.2222.0023.0023.0023.00
-!
-router bgp 520
- bgp router-id 23.23.23.23
- bgp log-neighbor-changes
- network 10.0.0.0 mask 255.255.255.192
- network 10.0.0.64 mask 255.255.255.192
- neighbor 25.25.25.25 remote-as 520
- neighbor 25.25.25.25 update-source Loopback0
- neighbor 25.25.25.25 next-hop-self
- neighbor 26.26.26.26 remote-as 520
- neighbor 26.26.26.26 update-source Loopback0
- neighbor 26.26.26.26 next-hop-self
- neighbor 101.22.2.1 remote-as 101
+S2#sh spanning-tree 
+VLAN0001
+  Spanning tree enabled protocol ieee
+  Root ID    Priority    32769
+             Address     0001.424A.94CB
+             Cost        19
+             Port        4(FastEthernet0/4)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
 
+  Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+             Address     0004.9ABD.E56A
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
 
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/2            Altn BLK 19        128.2    P2p
+Fa0/4            Root FWD 19        128.4    P2p
 ```
 
 
+### **Шаг 4. Удалите изменения стоимости порта.**
 
 
-### Настройте офиса С.-Петербург так, чтобы трафик до любого офиса распределялся по двум линкам одновременно.
+## **Часть 4. Наблюдение за процессом выбора протоколом STP порта, исходя из приоритета портов**
 
-
-### **С.-Петербург**
+### S1:
 
 ```
-interface Loopback0
- ip address 180.180.180.180 255.255.255.255
-!
-interface Loopback1
- no ip address
- ipv6 address 2001::180/128
- ipv6 enable
-!
-interface Ethernet0/0
- ip address 172.16.0.1 255.255.255.192
- ipv6 address FE80::4 link-local
- ipv6 address 2001:CBD8:ACAD:1::2/64
-!
-interface Ethernet0/1
- ip address 172.16.0.65 255.255.255.192
- ipv6 address FE80::3 link-local
- ipv6 address 2001:CBD8:ACAD:4::2/64
-!
-interface Ethernet0/2
- ip address 78.24.3.2 255.255.255.0
-!
-interface Ethernet0/3
- ip address 78.26.3.2 255.255.255.0
-!
-!
-router eigrp SPB
- !
- address-family ipv4 unicast autonomous-system 78
-  !
-  topology base
-   redistribute static
-  exit-af-topology
-  network 172.16.0.0 0.0.0.63
-  network 172.16.0.64 0.0.0.63
-  network 180.180.180.180 0.0.0.0
-  eigrp router-id 18.18.18.18
- exit-address-family
- !
- address-family ipv6 unicast autonomous-system 78
-  !
-  af-interface Ethernet0/1
-   summary-address 2001:CBD8:ACAD::/64
-  exit-af-interface
-  !
-  af-interface Ethernet0/0
-   summary-address 2001:CBD8:ACAD::/64
-  exit-af-interface
-  !
-  topology base
-   redistribute static
-  exit-af-topology
-  eigrp router-id 18.18.18.18
- exit-address-family
-!
-router bgp 2042
- bgp router-id 18.18.18.18
- bgp log-neighbor-changes
- bgp bestpath as-path multipath-relax
- network 78.24.3.0 mask 255.255.255.0
- network 78.26.3.0 mask 255.255.255.0
- neighbor 78.24.3.1 remote-as 520
- neighbor 78.26.3.1 remote-as 520
- maximum-paths 2
+S1#sh spanning-tree 
+VLAN0001
+  Spanning tree enabled protocol ieee
+  Root ID    Priority    32769
+             Address     0001.424A.94CB
+             Cost        19
+             Port        3(FastEthernet0/3)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
 
+  Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+             Address     00D0.FFC7.C9E4
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/1            Altn BLK 19        128.1    P2p
+Fa0/4            Altn BLK 19        128.4    P2p
+Fa0/2            Altn BLK 19        128.2    P2p
+Fa0/3            Root FWD 19        128.3    P2p
+```
+
+### S2:
+
+```
+S2#sh spanning-tree 
+VLAN0001
+  Spanning tree enabled protocol ieee
+  Root ID    Priority    32769
+             Address     0001.424A.94CB
+             Cost        19
+             Port        3(FastEthernet0/3)
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+
+  Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+             Address     0004.9ABD.E56A
+             Hello Time  2 sec  Max Age 20 sec  Forward Delay 15 sec
+             Aging Time  20
+
+Interface        Role Sts Cost      Prio.Nbr Type
+---------------- ---- --- --------- -------- --------------------------------
+Fa0/2            Desg FWD 19        128.2    P2p
+Fa0/3            Root FWD 19        128.3    P2p
+Fa0/4            Altn BLK 19        128.4    P2p
+Fa0/1            Desg FWD 19        128.1    P2p
 
 ```
 
-```
-R18#sh ip route  bgp
-Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
-       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
-       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
-       E1 - OSPF external type 1, E2 - OSPF external type 2
-       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
-       ia - IS-IS inter area, * - candidate default, U - per-user static route
-       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP
-       a - application route
-       + - replicated route, % - next hop override
-
-Gateway of last resort is 0.0.0.0 to network 0.0.0.0
-
-      10.0.0.0/26 is subnetted, 4 subnets
-B        10.0.0.0 [20/0] via 78.26.3.1, 00:14:40
-                  [20/0] via 78.24.3.1, 00:14:40
-B        10.0.0.64 [20/0] via 78.26.3.1, 00:14:40
-                   [20/0] via 78.24.3.1, 00:14:40
-B        10.0.0.128 [20/0] via 78.26.3.1, 00:14:40
-                    [20/0] via 78.24.3.1, 00:14:40
-B        10.0.0.192 [20/0] via 78.26.3.1, 00:14:40
-                    [20/0] via 78.24.3.1, 00:14:40
-      77.0.0.0/24 is subnetted, 2 subnets
-B        77.14.2.0 [20/0] via 78.26.3.1, 00:14:10
-                   [20/0] via 78.24.3.1, 00:14:10
-B        77.15.2.0 [20/0] via 78.26.3.1, 00:14:10
-                   [20/0] via 78.24.3.1, 00:14:10
-      100.0.0.0/24 is subnetted, 1 subnets
-B        100.22.1.0 [20/0] via 78.26.3.1, 00:14:10
-                    [20/0] via 78.24.3.1, 00:14:10
-      101.0.0.0/24 is subnetted, 2 subnets
-B        101.21.2.0 [20/0] via 78.26.3.1, 00:14:40
-                    [20/0] via 78.24.3.1, 00:14:40
-B        101.22.2.0 [20/0] via 78.26.3.1, 00:14:10
-                    [20/0] via 78.24.3.1, 00:14:10
+![](https://github.com/ivanbondarev1/Youdo/blob/main/LAB9/Lab___Building_a_Switched_Network_with_Redundant_Links-35585-eceba2.docx%20-%20Word%2026.10.2023%2019_33_12.png?raw=true)
 
 
-```
+
+
 
