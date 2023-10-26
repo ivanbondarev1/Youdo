@@ -335,7 +335,7 @@ Fa0/4            Desg FWD 19        128.4    P2p
 
 ```
 
-![](https://github.com/ivanbondarev1/Youdo/blob/main/LAB9/Рисунок1.png?raw=true)
+![](https://github.com/ivanbondarev1/Youdo/blob/main/LAB9/Lab___Building_a_Switched_Network_with_Redundant_Links-35585-eceba2.docx%20-%20Word%2027.10.2023%200_28_41.png?raw=true)
 
 ![](https://github.com/ivanbondarev1/Youdo/blob/main/LAB9/Lab___Building_a_Switched_Network_with_Redundant_Links-35585-eceba2.docx%20-%20Word%2026.10.2023%2018_56_27.png?raw=true)
 
