@@ -454,6 +454,7 @@ Fa0/2            Altn BLK 19        128.2    P2p
 Fa0/4            Root FWD 19        128.4    P2p
 ```
 
+![](https://github.com/ivanbondarev1/Youdo/blob/main/LAB9/Lab___Building_a_Switched_Network_with_Redundant_Links-35585-eceba2.docx%20-%20Word%2027.10.2023%2017_44_21.png?raw=true)
 
 ### **Шаг 4. Удалите изменения стоимости порта.**
 
