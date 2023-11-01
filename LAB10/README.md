@@ -1180,7 +1180,7 @@ S3(config)#spanning-tree portfast bpduguard default
 ### b.	Измените топологию, отключив интерфейс F0/1 на коммутаторе S3. 
 
 
-![](https://github.com/ivanbondarev1/Youdo/blob/main/LAB10/10.docx%20-%20Word%2030.10.2023%2017_19_48.png?raw=true)
+![](https://github.com/ivanbondarev1/Youdo/blob/main/LAB10/10.docx%20-%20Word%2001.11.2023%2016_04_49.png?raw=true)
 
 
 
